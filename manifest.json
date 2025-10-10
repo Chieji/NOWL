@@ -1,0 +1,64 @@
+{
+  "manifest_version": 3,
+  "name": "FACE - Facebook AI Chrome Extension",
+  "version": "1.0.0",
+  "description": "Your AI Social Assistant for Facebook automation",
+  
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "alarms",
+    "activeTab"
+  ],
+  
+  "host_permissions": [
+    "https://facebook.com/*",
+    "https://*.facebook.com/*",
+    "https://api.openai.com/*",
+    "https://api.anthropic.com/*",
+    "https://openrouter.ai/*",
+    "https://api.groq.com/*",
+    "https://api.together.xyz/*",
+    "https://api.cohere.ai/*",
+    "https://api.deepinfra.com/*",
+    "https://api.x.ai/*"
+  ],
+  
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "FACE - Your AI Social Assistant",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png",
+      "48": "icons/icon-48.png",
+      "128": "icons/icon-128.png"
+    }
+  },
+  
+  "background": {
+    "service_worker": "background.js"
+  },
+  
+  "content_scripts": [
+    {
+      "matches": ["https://facebook.com/*", "https://*.facebook.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  
+  "web_accessible_resources": [
+    {
+      "resources": ["injected.js"],
+      "matches": ["https://facebook.com/*", "https://*.facebook.com/*"]
+    }
+  ]
+}
