@@ -1,0 +1,22 @@
+@import "tailwindcss";
+
+/* FACE global theme */
+:root {
+  color-scheme: dark;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply m-0 bg-gradient-to-b from-[#0f1220] via-[#111325] to-black text-white;
+}
+
+.card-surface {
+  @apply bg-white/5 border border-white/10 rounded-xl shadow-sm backdrop-blur;
+}
+
+.text-secondary {
+  @apply text-slate-400;
+}
