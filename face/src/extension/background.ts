@@ -25,10 +25,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (!alarm?.name?.startsWith("face_post_")) return;
   // TODO: execute scheduled Facebook post flow
-  chrome.notifications?.create(undefined, {
-    type: "basic",
-    iconUrl: "vite.svg",
-    title: "FACE",
-    message: `Scheduled task triggered: ${alarm.name}`,
-  });
+  try {
+    chrome.notifications?.create({
+      type: "basic",
+      iconUrl: "vite.svg",
+      title: "FACE",
+      message: `Scheduled task triggered: ${alarm.name}`,
+    });
+  } catch {
+    // ignore notification failures in dev
+  }
 });

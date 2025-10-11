@@ -70,16 +70,16 @@ function App() {
   const [onFacebook, setOnFacebook] = useState<boolean | null>(null)
 
   useEffect(() => {
-    chrome?.runtime?.sendMessage?.({ type: 'PING' }, (res) => {
+    chrome?.runtime?.sendMessage?.({ type: 'PING' }, () => {
       // ignore
     })
 
     // Check if active tab is facebook via background stored flag (best-effort)
     try {
-      chrome.tabs?.query?.({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs?.query?.({ active: true, currentWindow: true }, (tabs: chrome.tabs.Tab[]) => {
         const tab = tabs?.[0]
         if (!tab?.id) return
-        chrome.storage?.session?.get?.([`fb_detected_${tab.id}`], (data) => {
+        chrome.storage?.session?.get?.([`fb_detected_${tab.id}`], (data: Record<string, unknown>) => {
           setOnFacebook(Boolean(data?.[`fb_detected_${tab.id}`]))
         })
       })
