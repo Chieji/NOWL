@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "FACE - Your AI Social Assistant",
+  "short_name": "FACE",
+  "version": "0.1.0",
+  "description": "An AI-powered Facebook automation assistant. Chat to post, schedule, and manage Facebook tasks.",
+  "action": {
+    "default_title": "FACE",
+    "default_popup": "index.html"
+  },
+  "icons": {
+    "16": "vite.svg",
+    "48": "vite.svg",
+    "128": "vite.svg"
+  },
+  "permissions": [
+    "storage",
+    "tabs",
+    "scripting",
+    "alarms",
+    "notifications"
+  ],
+  "host_permissions": [
+    "*://*.facebook.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.facebook.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
