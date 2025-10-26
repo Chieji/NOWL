@@ -1,0 +1,134 @@
+version: '3.8'
+
+services:
+  # Frontend - Next.js application
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - BACKEND_URL=http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - backend
+    networks:
+      - nexus-network
+    restart: unless-stopped
+
+  # Backend - FastAPI application
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=/app
+      - REDIS_URL=redis://redis:6379
+      - DATABASE_URL=postgresql://nexus:nexus_pass@postgres:5432/nexus_db
+      - API_RATE_LIMIT=100
+      - CORS_ORIGINS=http://localhost:3000,http://frontend:3000
+    volumes:
+      - .:/app
+      - ./logs:/app/logs
+    depends_on:
+      - redis
+      - postgres
+    networks:
+      - nexus-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis - For caching and rate limiting
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf
+    command: redis-server /usr/local/etc/redis/redis.conf
+    networks:
+      - nexus-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # PostgreSQL - For session storage and analytics
+  postgres:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=nexus_db
+      - POSTGRES_USER=nexus
+      - POSTGRES_PASSWORD=nexus_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - nexus-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nexus -d nexus_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Nginx - Reverse proxy and load balancer
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - nexus-network
+    restart: unless-stopped
+
+  # Monitoring with Prometheus (optional)
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+    networks:
+      - nexus-network
+    restart: unless-stopped
+
+networks:
+  nexus-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  prometheus_data:
+    driver: local
